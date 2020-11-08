@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Basic WASM Example</title>
+  </head>
+  <body>
+    <script type="module">
+      import init, {Card, Color} from './pkg/wasm.js';
+
+      async function run() {
+        const instance = await init();
+        console.log(Card);
+        instance.greet();
+        const card = new Card(1, Color.BLUE);
+        console.log(card);
+        console.log(card.number);
+        console.log(card.color);
+      }
+      run();
+    </script>
+</html>
