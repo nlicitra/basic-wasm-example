@@ -3,20 +3,179 @@
   <head>
     <meta charset="utf-8">
     <title>Basic WASM Example</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        font-family: Arial, Helvetica, sans-serif;
+        margin: 0;
+      }
+      #felt {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        background: linear-gradient(135deg, teal, rgb(9, 148, 127) 100%);
+        padding: 0 2%;
+        width: 100%;
+        height: 100vh;
+        min-height: 600px;
+      }
+      #card-area {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-evenly;
+        padding: 0 10px;
+        min-height: 400px;
+        min-width: 600px;
+        width: 100%;
+        border: 4px solid rgba(0,0,0,0.40);
+        border-radius: 10px;
+      }
+      .card {
+        background-color: white;
+        min-width: 250px;
+        min-height: 350px;
+        border-radius: 10px;
+        border: 2px solid black;
+        display: grid;
+        grid-template-rows: 2.5em 1fr 2.5em;
+        grid-template-columns: 2.5em 1fr 2.5em;
+        grid-template-areas:
+          "tl . tr"
+          ". symbol ."
+          "bl . br";
+        justify-items: center;
+        align-items: center;
+        padding: 4px;
+        box-shadow: 1px 2px 3px black;
+      }
+      .symbol {
+        font-size: 10em;
+      }
+      .value {
+        font-size: 2.5rem;
+        display: block;
+      }
+      .red {
+        color: tomato;
+      }
+
+      #deal {
+        margin-top: 1em;
+        padding: 0.5em;
+        text-align: center;
+        font-size: 2em;
+        width: 50%;
+        box-shadow: 2px 2px 2px black;
+      }
+
+      #deck {
+        align-self: flex-start;
+        font-size: 6em;
+        color: whitesmoke;
+        position: relative;
+        height: 110px;
+      }
+
+      #deck > span {
+        display: block;
+        position: absolute;
+      }
+    </style>
   </head>
   <body>
     <script type="module">
-      import init, {Card, Color} from './pkg/wasm.js';
+      import init, {Card, Deck, Suit} from './pkg/wasm.js';
 
       async function run() {
         const instance = await init();
-        console.log(Card);
-        instance.greet();
-        const card = new Card(1, Color.BLUE);
-        console.log(card);
-        console.log(card.number);
-        console.log(card.color);
+        console.log(instance.memory.buffer);
+
+        const deck = new Deck();
+        setDeckCount(deck);
+
+        document.querySelector("#deal").addEventListener("click", () => {
+          Array.from(document.querySelectorAll(".card")).forEach(c => c.parentNode.removeChild(c));
+          deal(deck);
+          setDeckCount(deck);
+        });
       }
+
+      function setDeckCount(deck) {
+        const div = document.querySelector("#deck");
+        const count = deck.get_cards().length;
+        let html = "";
+        for (let i = 0; i < count; i+=3) {
+          html += `
+            <span style="left: ${i}px">🎴</span>
+          `
+        }
+        div.innerHTML = html;
+      }
+
+      function deal(deck, cardCount = 5) {
+        const hand = deck.deal(cardCount);
+        hand.forEach(addCard);
+      }
+
+      function getSuitChar(card) {
+        const mapping = {
+          [Suit.SPADE]: '♠',
+          [Suit.DIAMOND]: '♦',
+          [Suit.HEART]: '❤',
+          [Suit.CLUB]: '♣',
+        }
+        return mapping[Suit[card.suit]];
+      }
+
+      function getSuitColor(card) {
+        const mapping = {
+          [Suit.SPADE]: 'black',
+          [Suit.DIAMOND]: 'red',
+          [Suit.HEART]: 'red',
+          [Suit.CLUB]: 'black',
+        }
+        return mapping[Suit[card.suit]];
+      }
+
+      function getDisplayValue(card) {
+        if (card.value === 1) {
+          return "A";
+        } else if (card.value < 11) {
+          return card.value;
+        } else if (card.value === 11) {
+          return "J";
+        } else if (card.value === 12) {
+          return "Q";
+        } else if (card.value === 13) {
+          return "K";
+        }
+      }
+
+      function addCard(card) {
+        const root = document.querySelector("#card-area");
+        const symbol = getSuitChar(card);
+        const displayValue = getDisplayValue(card);
+        const html = `
+          <div class="card ${getSuitColor(card)}">
+            <span class="value" style="grid-area: tl">${displayValue}</span>
+            <span class="value" style="grid-area: tr">${displayValue}</span>
+            <span class="symbol" style="grid-area: symbol">${symbol}</span>
+            <span class="value" style="grid-area: bl">${displayValue}</span>
+            <span class="value" style="grid-area: br">${displayValue}</span>
+          </div>
+        `;
+        root.insertAdjacentHTML("beforeend", html);
+      }
+
       run();
     </script>
+
+    <div id="felt">
+      <div id="deck"></div>
+      <div id="card-area"></div>
+      <button id="deal">DEAL</button>
+    </div>
 </html>

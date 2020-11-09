@@ -7,10 +7,16 @@
 
 ## 🚴 Usage
 
-### 🛠️ Build with `wasm-pack build`
+### 🛠️ Build with `wasm-pack`
 
 ```
-wasm-pack build
+./build.sh
+```
+
+### 🚀 Start local http server 
+
+```
+./serve.sh
 ```
 
 ### 🔬 Test in Headless Browsers with `wasm-pack test`

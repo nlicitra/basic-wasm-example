@@ -1,1 +1,1 @@
-wasm-pack build --target web --out-name wasm
+wasm-pack build --target web --out-name wasm --debug
